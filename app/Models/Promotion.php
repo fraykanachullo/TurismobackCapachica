@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Promotion extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'company_id', 'title', 'description', 'discount_percentage', 'start_date', 'end_date', 'status'
     ];
@@ -16,4 +17,10 @@ class Promotion extends Model
     {
         return $this->belongsTo(Company::class);
     }
+
+    public function services()
+    {
+        return $this->belongsToMany(Service::class, 'promotion_service');
+    }
 }
+

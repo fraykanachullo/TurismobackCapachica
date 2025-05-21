@@ -13,7 +13,7 @@ use OwenIt\Auditing\Auditable as AuditableTrait;
 class Service extends Model implements Auditable
 {
     use AuditableTrait;
-    
+
     protected $fillable = [
       'company_id',
       'category_id',
@@ -29,6 +29,7 @@ class Service extends Model implements Auditable
       'duration',
       'status',
       'published_at',
+      'is_active',
     ];
 
     public function company() { return $this->belongsTo(Company::class); }
@@ -37,4 +38,11 @@ class Service extends Model implements Auditable
     public function media()    { return $this->hasMany(ServiceMedia::class); }
     public function reservations() { return $this->hasMany(Reservation::class); }
     public function reviews()      { return $this->hasMany(Review::class); }
+    
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotion_service');
+    }
+
+    
 }

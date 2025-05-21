@@ -15,28 +15,40 @@ class ReservaPublicaController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'service_id' => 'required|exists:services,id',
+        // Capturamos los datos validados en $data
+        $data = $request->validate([
+            'service_id'       => 'required|exists:services,id',
             'reservation_date' => 'required|date|after_or_equal:today',
-            'people_count' => 'required|integer|min:1',
+            'people_count'     => 'required|integer|min:1',
         ]);
 
-        $service = Service::findOrFail($request->service_id);
+        $service = Service::findOrFail($data['service_id']);
+
+        // Verificar disponibilidad
+        $existing = Reservation::where('service_id', $service->id)
+                        ->where('reservation_date', $data['reservation_date'])
+                        ->sum('people_count');
+
+        if ($existing + $data['people_count'] > $service->capacity) {
+            return response()->json([
+                'message' => 'No hay disponibilidad para la fecha seleccionada.'
+            ], 422);
+        }
 
         // Calcular el total
-        $total = $service->price * $request->people_count;
+        $total = $service->price * $data['people_count'];
 
         $reservation = Reservation::create([
-            'user_id' => Auth::id(),
-            'service_id' => $service->id,
-            'reservation_date' => $request->reservation_date,
-            'people_count' => $request->people_count,
-            'total_amount' => $total,
-            'status' => 'pending',
+            'user_id'          => Auth::id(),
+            'service_id'       => $service->id,
+            'reservation_date' => $data['reservation_date'],
+            'people_count'     => $data['people_count'],
+            'total_amount'     => $total,
+            'status'           => 'pending',
         ]);
 
         return response()->json([
-            'message' => 'Reserva creada exitosamente.',
+            'message'     => 'Reserva creada exitosamente.',
             'reservation' => $reservation
         ], 201);
     }

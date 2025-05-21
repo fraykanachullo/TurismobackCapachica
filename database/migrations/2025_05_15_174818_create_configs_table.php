@@ -15,8 +15,13 @@ return new class extends Migration
             $t->id();
             $t->string('key')->unique();
             $t->text('value');
+
             $t->timestamps();
           });
+          
+          Schema::table('configs', function (Blueprint $table) {
+            $table->foreignId('user_id')->nullable()->after('id')->constrained()->onDelete('cascade');
+        });
     }
 
     /**
@@ -25,5 +30,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('configs');
+
+        Schema::table('configs', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
+            $table->dropColumn('user_id');
+        });
     }
 };

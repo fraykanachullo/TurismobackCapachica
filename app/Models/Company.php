@@ -29,4 +29,15 @@ class Company extends Model implements Auditable
     {
         return $this->belongsTo(Location::class);
     }
+    
+        public function packages()
+    {
+        return $this->hasMany(Package::class);
+    }
+
+    public function promotions()
+    {
+        return $this->hasMany(Promotion::class);
+    }
+
 }

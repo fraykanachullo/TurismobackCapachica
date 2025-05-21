@@ -87,6 +87,32 @@ class ServicioController extends Controller
           'message'=>'Servicio actualizado.',
           'service'=> $service->fresh()->load('category','zone')
         ]);
-    }
+        }
+
+        public function destroy($id)
+        {
+        $service = Service::findOrFail($id);
+        if ($service->company->user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+        $service->delete();
+        return response()->noContent();
+        }
+
+
+        public function toggleActive(Request $request, $id)
+        {
+            $service = Service::findOrFail($id);
+            if ($service->company->user_id !== Auth::id()) {
+                return response()->json(['message'=>'No autorizado'],403);
+            }
+            // toggle entre pending ↔ active
+            $service->status = $service->status === 'active' ? 'pending' : 'active';
+            $service->save();
+            return response()->json(['status'=>$service->status]);
+        }
+
+
+
 }
 

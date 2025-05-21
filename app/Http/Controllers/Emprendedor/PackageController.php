@@ -36,4 +36,35 @@ class PackageController extends Controller
     }
 
     // show, update, destroy similares...
+
+            public function show($id)
+        {
+            $package = Package::where('company_id', Auth::user()->company->id)->findOrFail($id);
+            return response()->json($package);
+        }
+
+        public function update(Request $request, $id)
+        {
+            $package = Package::where('company_id', Auth::user()->company->id)->findOrFail($id);
+
+            $data = $request->validate([
+                'title' => 'sometimes|string|max:255',
+                'description' => 'sometimes|string',
+                'price' => 'sometimes|numeric|min:0',
+                'status' => 'sometimes|in:pending,active,paused,rejected',
+            ]);
+
+            $package->update($data);
+
+            return response()->json(['message' => 'Paquete actualizado', 'package' => $package]);
+        }
+
+        public function destroy($id)
+        {
+            $package = Package::where('company_id', Auth::user()->company->id)->findOrFail($id);
+            $package->delete();
+
+            return response()->noContent();
+        }
+
 }
