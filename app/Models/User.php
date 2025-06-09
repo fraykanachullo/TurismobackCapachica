@@ -8,40 +8,69 @@ use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-// modelo trait para auditar
 use OwenIt\Auditing\Contracts\Auditable;
 use OwenIt\Auditing\Auditable as AuditableTrait;
 
-class User extends Authenticatable implements CanResetPassword, Auditable  //auditable
+class User extends Authenticatable implements CanResetPassword, Auditable
 {
     use HasApiTokens, Notifiable, HasRoles, HasFactory, AuditableTrait;
 
-    protected $fillable = ['name', 'email', 'password', 'avatar_url', 'google_id'];  // Agregar 'google_id'
+    /**
+     * Campos asignables
+     */
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'foto',        // coincide con tu columna en la migración
+        'google_id',   // si usas login social
+        'estado',      // activo / bloqueado
+    ];
 
-    protected $hidden = ['password', 'remember_token'];
+    /**
+     * Campos ocultos en el JSON
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
-    // Relación con la empresa (si aplica)
+    /**
+     * Scope: sólo usuarios con rol "turista"
+     */
+    public function scopeTuristas($query)
+    {
+        return $query->role('turista');
+    }
+
+    /**
+     * Relaciones
+     */
     public function company()
     {
         return $this->hasOne(Company::class);
     }
 
-    // Relación con las reservaciones
     public function reservations()
     {
         return $this->hasMany(Reservation::class);
     }
 
-    // Relación con las reseñas
     public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
-    // Relación con el comportamiento del usuario (si aplica)
     public function behaviors()
     {
         return $this->hasOne(UserBehavior::class);
     }
-}
 
+    /**
+     * Accesor: calificación promedio de reviews
+     */
+    public function getAverageRatingAttribute()
+    {
+        return round($this->reviews()->avg('rating'), 2);
+    }
+}

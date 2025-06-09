@@ -12,36 +12,7 @@ use App\Models\Company;
 class SuperadminController extends Controller
 {
     
-    public function crearUsuarioEmprendedor(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:6',
-        ]);
 
-        $usuario = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        $usuario->assignRole('emprendedor');
-
-        return response()->json([
-            'mensaje' => 'Usuario emprendedor creado exitosamente',
-            'usuario' => $usuario
-        ]);
-    }
-
-   
-
-    public function listarUsuarios()
-    {
-        $usuarios = User::with('roles')->latest()->get();
-
-        return response()->json($usuarios);
-    }
 
 
 

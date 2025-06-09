@@ -1,15 +1,20 @@
 <?php
+// app/Models/Location.php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Location extends Model
 {
-    protected $fillable = ['name','type'];
-    public function companies()
-    {
-      return $this->hasMany(Company::class);
-    }
+    protected $fillable = [
+      'name','type',
+      'descripcion_corta','descripcion_larga',
+      'atractivos','habitantes',
+      'estado','imagen','galeria',
+    ];
+
+    protected $casts = [
+      'galeria' => 'array',
+    ];
 }

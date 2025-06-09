@@ -11,8 +11,13 @@ return new class extends Migration {
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('avatar_url')->nullable();
+            $table->string('foto')->nullable();
             $table->timestamp('email_verified_at')->nullable();
+
+            // Aquí defines el enum con los tres valores
+            $table->enum('estado', ['activo','pendiente','suspendido'])
+                  ->default('activo');
+
             $table->rememberToken();
             $table->timestamps();
         });

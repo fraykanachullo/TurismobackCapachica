@@ -32,12 +32,16 @@ use App\Http\Controllers\Superadmin\UserManagementController;
 use App\Http\Controllers\Superadmin\CompanyManagementController;
 use App\Http\Controllers\Superadmin\ContentManagementController;
 use App\Http\Controllers\Superadmin\ExperienceManagementController;
+use App\Http\Controllers\Superadmin\CommunityManagementController;
 use App\Http\Controllers\Superadmin\ReportController;
 use App\Http\Controllers\Superadmin\ConfigController           as SuperadminConfigController;
 use App\Http\Controllers\Superadmin\SecurityController;
 use App\Http\Controllers\Superadmin\SuperadminController;
 use App\Http\Controllers\Superadmin\PortalController;
 use App\Http\Controllers\Superadmin\PortalDesignController;
+use App\Http\Controllers\Superadmin\EmprendedoresController;
+use App\Http\Controllers\Superadmin\CategoryManagementController;
+
 
 // --- CONTROLADORES EMPRENDEDOR ---
 use App\Http\Controllers\Emprendedor\DashboardController      as EmprendedorDashboardController;
@@ -51,6 +55,8 @@ use App\Http\Controllers\Emprendedor\ConfigController          as EmprendedorCon
 use App\Http\Controllers\Emprendedor\ReservacionesController;
 use App\Http\Controllers\Emprendedor\ServicioController;
 use App\Http\Controllers\Emprendedor\CalendarController        as EmprendedorCalendarController;
+use App\Http\Controllers\Emprendedor\EmprendedorController;
+
 
 // --- CONTROLADORES TURISTA ---
 use App\Http\Controllers\Turista\DashboardController          as TuristaDashboardController;
@@ -110,14 +116,62 @@ Route::middleware(['auth:sanctum','role:superadmin'])
     ->prefix('superadmin')
     ->group(function () {
         Route::get('dashboard', [SuperadminDashboardController::class, 'overview']);
-        Route::apiResource('users',       UserManagementController::class);
+
+        //Route::apiResource('users',       UserManagementController::class);   
+
+         // ↓↓↓  Aquí insertas las rutas de gestión de TURISTAS ↓↓↓
+         Route::get('turistas',                    [UserManagementController::class, 'index']);
+         Route::get('turistas/{id}',               [UserManagementController::class, 'show']);
+         Route::put('turistas/{id}/status',        [UserManagementController::class, 'updateStatus']);
+         Route::post('turistas/{id}/mensaje',      [UserManagementController::class, 'sendMessage']);
+         // ↑↑↑  Fin de rutas de TURISTAS ↑↑↑
+
         Route::get('companies/pending',   [CompanyManagementController::class, 'pending']);
         Route::put('companies/{id}/approve', [CompanyManagementController::class, 'approve']);
         Route::put('companies/{id}/reject',  [CompanyManagementController::class, 'reject']);
+
+
+        // use App\Http\Controllers\Superadmin\EmprendedoresController;
+        Route::get('emprendedores/kpis',           [EmprendedoresController::class, 'kpis']);
+        Route::get('emprendedores',                [EmprendedoresController::class, 'index']);
+        Route::post('emprendedores',               [EmprendedoresController::class, 'store']);
+        Route::get('emprendedores/{id}',           [EmprendedoresController::class, 'show']);
+        Route::put('emprendedores/{id}/estado',    [EmprendedoresController::class, 'updateEstado']);
+        Route::delete('emprendedores/{id}',        [EmprendedoresController::class, 'destroy']);
+
         Route::apiResource('contents',     ContentManagementController::class)
              ->only(['index','show','update','destroy']);
-        Route::apiResource('experiences',  ExperienceManagementController::class)
-             ->only(['index','show','update','destroy']);
+
+         // ↓↓↓ RUTAS PARA EXPERIENCIAS PUBLICADAS ↓↓↓
+        // Dentro del group superadmin, reemplaza tu bloque de rutas por esto:
+
+         // 1) EXPERIENCIAS PUBLICADAS (filtros estáticos)
+         Route::get   ('experiencias/publicadas',        [ExperienceManagementController::class,'published']);
+          
+         // CRUD de comunidades
+         Route::get   ('comunidades',             [CommunityManagementController::class,'index']);
+         Route::post  ('comunidades',             [CommunityManagementController::class,'store']);
+         Route::get   ('comunidades/{community}', [CommunityManagementController::class,'show']);
+         Route::put   ('comunidades/{community}', [CommunityManagementController::class,'update']);
+         Route::delete('comunidades/{community}', [CommunityManagementController::class,'destroy']);
+  
+
+         // 2) CRUD de CATEGORÍAS de experiencias
+         Route::get   ('experiencias/categorias',               [CategoryManagementController::class,'index']);
+         Route::post  ('experiencias/categorias',               [CategoryManagementController::class,'store']);
+         Route::put   ('experiencias/categorias/{category}',    [CategoryManagementController::class,'update']);
+         Route::delete('experiencias/categorias/{category}',    [CategoryManagementController::class,'destroy']);
+
+         // 3) Rutas dinámicas de una experiencia individual
+         Route::get   ('experiencias/{experience}',       [ExperienceManagementController::class,'show']);
+         Route::put   ('experiencias/{experience}/pausar',[ExperienceManagementController::class,'pause']);
+         Route::put   ('experiencias/{experience}',      [ExperienceManagementController::class,'update']);
+         Route::delete('experiencias/{experience}',      [ExperienceManagementController::class,'destroy']);
+
+
+         // ↑↑↑ fin de EXPERIENCIAS ↓↑↑
+
+             
         Route::get('reports/sales',        [ReportController::class, 'salesBy']);
         Route::get('reports/usage',        [ReportController::class, 'usageMetrics']);
         Route::get('config',               [SuperadminConfigController::class, 'show']);
@@ -125,8 +179,10 @@ Route::middleware(['auth:sanctum','role:superadmin'])
         Route::get('security/logs',        [SecurityController::class, 'logs']);
         Route::get('security/audit',       [SecurityController::class, 'auditTrail']);
         Route::post('crear-usuario-emprendedor', [SuperadminController::class, 'crearUsuarioEmprendedor']);
+
         Route::get('empresas/lista',             [SuperadminController::class, 'listarEmpresas']);
         Route::get('empresas/pendientes',        [SuperadminController::class, 'listarEmpresasPendientes']);
+
         Route::post('portal',                    [PortalController::class, 'store']);
         Route::get('portales',                   [PortalController::class, 'index']);
         Route::get('portal/{id}/diseño',         [PortalDesignController::class, 'show']);
