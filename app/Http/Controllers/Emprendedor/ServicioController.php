@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use App\Models\Service;
 use App\Models\ServiceMedia;
 
@@ -18,7 +19,7 @@ class ServicioController extends Controller
     }
 
     /**
-     * Listar servicios del emprendedor
+     * 1️⃣ Listar servicios del emprendedor
      */
     public function index()
     {
@@ -31,11 +32,12 @@ class ServicioController extends Controller
     }
 
     /**
-     * Crear un servicio + subir fotos
+     * 2️⃣ Crear un servicio + subir fotos
+     *    POST /api/emprendedor/servicios
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $data = $request->validate([
             'title'               => 'required|string|max:255',
             'type'                => 'required|in:tour,hospedaje,gastronomia,experiencia',
             'description'         => 'required|string',
@@ -46,10 +48,8 @@ class ServicioController extends Controller
             'policy_cancellation' => 'nullable|string',
             'category_id'         => 'required|exists:categories,id',
             'location_id'         => 'required|exists:locations,id',
-
-            // Validación de imágenes
-            'photos'              => 'nullable|array',
-            'photos.*'            => 'image|mimes:jpeg,png,jpg,gif,svg|max:5048',
+            // fotos iniciales (opcional)
+            'photos.*'            => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5048',
         ]);
 
         $company = Auth::user()->company;
@@ -57,61 +57,50 @@ class ServicioController extends Controller
             return response()->json(['message' => 'Empresa no aprobada'], 403);
         }
 
-        // 1) Crear el servicio
-        $service = $company->services()->create([
-            'title'               => $request->title,
-            'slug'                => Str::slug($request->title) . '-' . uniqid(),
-            'type'                => $request->type,
-            'description'         => $request->description,
-            'location'            => $request->location,
-            'price'               => $request->price,
-            'capacity'            => $request->capacity,
-            'duration'            => $request->duration,
-            'policy_cancellation' => $request->policy_cancellation,
-            'status'              => 'active',
-            'published_at'        => now(),
-            'category_id'         => $request->category_id,
-            'location_id'         => $request->location_id,
-        ]);
+        // preparar campos extra
+        $data['slug']         = Str::slug($data['title']) . '-' . uniqid();
+        $data['status']       = 'active';
+        $data['published_at'] = now();
 
-        // 2) Procesar y almacenar cada foto
+        // crear servicio
+        $service = $company->services()->create($data);
+
+        // subir fotos iniciales
         if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $index => $file) {
+            foreach ($request->file('photos') as $idx => $file) {
                 $path = $file->store("services/{$service->id}", 'public');
                 ServiceMedia::create([
                     'service_id'   => $service->id,
                     'url'          => Storage::url($path),
                     'type'         => 'image',
-                    'order_column' => $index,
+                    'order_column' => $idx,
                 ]);
             }
         }
 
-        // 3) Cargar las relaciones antes de devolver
         $service->load(['media','category','zone']);
-
         return response()->json([
             'message' => 'Servicio creado exitosamente.',
-            'service' => $service,
+            'service' => $service
         ], 201);
     }
 
     /**
-     * Ver un servicio propio
+     * 3️⃣ Mostrar detalle de un servicio propio
+     *    GET /api/emprendedor/servicios/{id}
      */
     public function show($id)
     {
         $service = Service::with(['media','category','zone'])->findOrFail($id);
-
         if ($service->company->user_id !== Auth::id()) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
-
         return response()->json($service);
     }
 
     /**
-     * Actualizar datos de un servicio
+     * 4️⃣ Actualizar solo campos simples (sin fotos)
+     *    PATCH /api/emprendedor/servicios/{id}
      */
     public function update(Request $request, $id)
     {
@@ -120,22 +109,90 @@ class ServicioController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        $data = $request->validate([
-            'title','type','description','location','price',
-            'capacity','duration','policy_cancellation',
-            'category_id','location_id'
+        $validator = Validator::make($request->all(), [
+            'title'               => 'sometimes|required|string|max:255',
+            'type'                => 'sometimes|required|in:tour,hospedaje,gastronomia,experiencia',
+            'description'         => 'sometimes|required|string',
+            'location'            => 'sometimes|required|string|max:255',
+            'price'               => 'sometimes|required|numeric|min:0',
+            'capacity'            => 'sometimes|nullable|integer|min:1',
+            'duration'            => 'sometimes|nullable|string|max:100',
+            'policy_cancellation' => 'sometimes|nullable|string',
+            'category_id'         => 'sometimes|required|exists:categories,id',
+            'location_id'         => 'sometimes|required|exists:locations,id',
         ]);
 
-        $service->update($data);
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Errores de validación',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        $service->update($validator->validated());
+        $service->load(['media','category','zone']);
 
         return response()->json([
             'message' => 'Servicio actualizado.',
-            'service' => $service->fresh()->load(['media','category','zone']),
-        ]);
+            'service' => $service
+        ], 200);
     }
 
     /**
-     * Eliminar un servicio
+     * 5️⃣ Subir nuevas fotos a un servicio existente
+     *    POST /api/emprendedor/servicios/{id}/media
+     */
+    public function storeMedia(Request $request, $id)
+    {
+        $service = Service::findOrFail($id);
+        if ($service->company->user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $request->validate([
+            'photos'   => 'required|array',
+            'photos.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:5048',
+        ]);
+
+        $uploaded = [];
+        foreach ($request->file('photos') as $idx => $file) {
+            $path = $file->store("services/{$service->id}", 'public');
+            $media = ServiceMedia::create([
+                'service_id'   => $service->id,
+                'url'          => Storage::url($path),
+                'type'         => 'image',
+                'order_column' => $idx,
+            ]);
+            $uploaded[] = $media;
+        }
+
+        return response()->json([
+            'message' => 'Imágenes subidas.',
+            'media'   => $uploaded
+        ], 201);
+    }
+
+    /**
+     * 6️⃣ Eliminar una foto de un servicio
+     *    DELETE /api/emprendedor/servicios/{id}/media/{mediaId}
+     */
+    public function destroyMedia($id, $mediaId)
+    {
+        $service = Service::findOrFail($id);
+        if ($service->company->user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $media = ServiceMedia::where('service_id', $service->id)
+                              ->findOrFail($mediaId);
+        $media->delete();
+
+        return response()->noContent();
+    }
+
+    /**
+     * 7️⃣ Eliminar servicio
+     *    DELETE /api/emprendedor/servicios/{id}
      */
     public function destroy($id)
     {
@@ -144,17 +201,19 @@ class ServicioController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
         $service->delete();
+
         return response()->noContent();
     }
 
     /**
-     * Activar / Desactivar servicio
+     * 8️⃣ Activar / Desactivar servicio
+     *    PATCH /api/emprendedor/servicios/{id}/toggle-active
      */
     public function toggleActive(Request $request, $id)
     {
         $service = Service::findOrFail($id);
         if ($service->company->user_id !== Auth::id()) {
-            return response()->json(['message'=>'No autorizado'],403);
+            return response()->json(['message' => 'No autorizado'], 403);
         }
         $service->status = $service->status === 'active' ? 'pending' : 'active';
         $service->save();

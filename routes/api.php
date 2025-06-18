@@ -22,6 +22,8 @@ use App\Http\Controllers\Publico\CartController;
 use App\Http\Controllers\Publico\CheckoutController;
 use App\Http\Controllers\Publico\CalendarController as PublicCalendarController;
 
+use App\Http\Controllers\MessageController;
+
 // --- CONTROLADORES AUXILIARES ---
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\CategoryController;
@@ -46,8 +48,8 @@ use App\Http\Controllers\Superadmin\CategoryManagementController;
 // --- CONTROLADORES EMPRENDEDOR ---
 use App\Http\Controllers\Emprendedor\DashboardController      as EmprendedorDashboardController;
 use App\Http\Controllers\Emprendedor\PackageController        as EmprendedorPackageController;
-use App\Http\Controllers\Emprendedor\ReservationController    as EmprendedorReservationController;
-use App\Http\Controllers\Emprendedor\MessageController;
+use App\Http\Controllers\Emprendedor\ReservacionesController as EmprendedorReservationController;
+
 use App\Http\Controllers\Emprendedor\PromotionController;
 use App\Http\Controllers\Emprendedor\BlogController;
 use App\Http\Controllers\Emprendedor\ProfileController         as EmprendedorProfileController;
@@ -183,6 +185,11 @@ Route::middleware(['auth:sanctum','role:superadmin'])
         Route::get('empresas/lista',             [SuperadminController::class, 'listarEmpresas']);
         Route::get('empresas/pendientes',        [SuperadminController::class, 'listarEmpresasPendientes']);
 
+        //Gestion de empresa
+        Route::get('/empresas/pendientes', [SuperadminController::class, 'listarEmpresasPendientes']);
+        Route::put('/aprobar-empresa/{id}', [SuperadminController::class, 'aprobarEmpresa']);
+        Route::put('/rechazar-empresa/{id}', [SuperadminController::class, 'rechazarEmpresa']);
+        Route::get('/empresas/lista', [SuperadminController::class, 'listarTodasLasEmpresas']);
         Route::post('portal',                    [PortalController::class, 'store']);
         Route::get('portales',                   [PortalController::class, 'index']);
         Route::get('portal/{id}/diseño',         [PortalDesignController::class, 'show']);
@@ -199,13 +206,18 @@ Route::middleware(['auth:sanctum','role:emprendedor'])
         Route::get('estado-empresa', [EmprendedorController::class, 'estadoEmpresa']);
         Route::get('dashboard',      [EmprendedorDashboardController::class, 'overview']);
 
+       
         // Servicios
-        Route::get(   'servicios',                [ServicioController::class, 'index']);
-        Route::post(  'servicios',                [ServicioController::class, 'store']);
-        Route::get(   'servicios/{id}',           [ServicioController::class, 'show']);
-        Route::put(   'servicios/{id}',           [ServicioController::class, 'update']);
-        Route::delete('servicios/{id}',           [ServicioController::class, 'destroy']);
-        Route::patch( 'servicios/{id}/toggle-active', [ServicioController::class, 'toggleActive']);
+        Route::get(   'servicios',                  [ServicioController::class, 'index']);
+        Route::post(  'servicios',                  [ServicioController::class, 'store']);
+        Route::get(   'servicios/{id}',             [ServicioController::class, 'show']);
+        Route::patch( 'servicios/{id}',             [ServicioController::class, 'update']);
+        Route::delete('servicios/{id}',             [ServicioController::class, 'destroy']);
+        Route::patch( 'servicios/{id}/toggle-active',[ServicioController::class, 'toggleActive']);
+
+        // Media (imágenes)
+        Route::post(   'servicios/{id}/media',               [ServicioController::class, 'storeMedia']);
+        Route::delete( 'servicios/{id}/media/{mediaId}',     [ServicioController::class, 'destroyMedia']);
 
         // Paquetes y promociones
         Route::apiResource('paquetes',    EmprendedorPackageController::class);
@@ -216,7 +228,7 @@ Route::middleware(['auth:sanctum','role:emprendedor'])
         Route::get('calendar/{service}',  [EmprendedorCalendarController::class, 'occupiedDates']);
 
         // Mensajes, blog, perfil y config
-        Route::apiResource('mensajes', MessageController::class);
+        
         Route::apiResource('blog',     BlogController::class);
         Route::get('perfil', [EmprendedorProfileController::class, 'show']);
         Route::put('perfil', [EmprendedorProfileController::class, 'update']);
@@ -224,10 +236,11 @@ Route::middleware(['auth:sanctum','role:emprendedor'])
         Route::put('config', [EmprendedorConfigController::class, 'update']);
 
         // Reservaciones para emprendedor
-        Route::get('reservaciones',            [ReservacionesController::class, 'index']);
-        Route::get('reservaciones/{id}',       [ReservacionesController::class, 'show']);
-        Route::put('reservaciones/{id}/estado',[ReservacionesController::class, 'updateStatus']);
+        Route::get('reservaciones',             [ReservacionesController::class, 'index']);
+        Route::get('reservaciones/{id}',        [ReservacionesController::class, 'show']);
+        Route::put('reservaciones/{id}/estado', [ReservacionesController::class, 'updateStatus']);
     });
+
 
 // Turista
 Route::middleware(['auth:sanctum','role:turista'])
@@ -263,3 +276,24 @@ Route::middleware(['auth:sanctum','role:turista'])
 
 
     });
+
+
+
+    
+// ------------------------------
+// RUTAS DE LA API DE MENSAJES
+// ------------------------------
+Route::middleware('auth:sanctum')
+->prefix('mensajes')
+->group(function () {
+    // Listar todos los mensajes del usuario
+    Route::get('/',           [MessageController::class, 'index']);
+    // Enviar un nuevo mensaje
+    Route::post('/',          [MessageController::class, 'store']);
+    // Ver un mensaje concreto
+    Route::get('{message}',   [MessageController::class, 'show']);
+    // Editar un mensaje (solo quien lo envió)
+    Route::put('{message}',   [MessageController::class, 'update']);
+    // Eliminar un mensaje (solo quien lo envió)
+    Route::delete('{message}',[MessageController::class, 'destroy']);
+});

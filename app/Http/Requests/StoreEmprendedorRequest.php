@@ -27,6 +27,9 @@ class StoreEmprendedorRequest extends FormRequest
             'password_confirmation'  => ['required','string','min:6'],
            // 'estado'                 => ['nullable','in:activo,pendiente,suspendido'],
 
+           'fecha_registro'  => ['nullable','date'],
+
+
             'imagen'                 => ['nullable','image','mimes:jpeg,png,jpg,gif,svg','max:5048'],
         ];
     }

@@ -107,6 +107,7 @@ class EmprendedoresController extends Controller
                 'email'  => $user->email,
                 'estado' => $user->estado,
                 'foto'   => $user->foto,
+                'fecha_registro'  => $user->created_at->toDateString(),  // ← aquí
             ],
         ], 201);
     }
