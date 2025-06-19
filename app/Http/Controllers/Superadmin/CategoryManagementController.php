@@ -29,14 +29,16 @@ class CategoryManagementController extends Controller
     public function store(Request $r)
     {
         $r->validate([
-            'name' => 'required|string|unique:categories,name',
+            'name'        => 'required|string|unique:categories,name',
+            'description' => 'nullable|string|max:1000',
+            'status'      => 'required|in:active,inactive',
         ]);
-
-        $cat = Category::create(['name' => $r->input('name')]);
-
+    
+        $cat = Category::create($r->only(['name','description','status']));
+    
         return response()->json([
-            'message'   => 'Categoría creada con éxito.',
-            'category'  => $cat
+            'message'  => 'Categoría creada con éxito.',
+            'category' => $cat
         ], 201);
     }
 
@@ -45,18 +47,21 @@ class CategoryManagementController extends Controller
      * PUT /superadmin/experiencias/categorias/{category}
      */
     public function update(Request $r, Category $category)
-    {
-        $r->validate([
-            'name' => 'required|string|unique:categories,name,'.$category->id,
-        ]);
+        {
+            $r->validate([
+                'name'        => 'required|string|unique:categories,name,'.$category->id,
+                'description' => 'nullable|string|max:1000',
+                'status'      => 'required|in:active,inactive',
+            ]);
 
-        $category->update(['name' => $r->input('name')]);
+            $category->update($r->only(['name','description','status']));
 
-        return response()->json([
-            'message'   => 'Categoría actualizada correctamente.',
-            'category'  => $category
-        ]);
-    }
+            return response()->json([
+                'message'  => 'Categoría actualizada correctamente.',
+                'category' => $category
+            ]);
+        }
+
 
     /**
      * Eliminar una categoría
