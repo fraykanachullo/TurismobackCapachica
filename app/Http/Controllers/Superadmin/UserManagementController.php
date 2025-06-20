@@ -103,7 +103,7 @@ class UserManagementController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $v = Validator::make($request->all(), [
-            'estado' => 'required|in:activo,bloqueado',
+            'estado' => 'required|in:activo,pendiente,suspendido',
         ]);
         if ($v->fails()) {
             return response()->json(['errors'=>$v->errors()], 422);

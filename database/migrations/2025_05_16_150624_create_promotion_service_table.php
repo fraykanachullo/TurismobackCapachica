@@ -9,10 +9,10 @@ return new class extends Migration {
         Schema::create('promotion_service', function (Blueprint $table) {
             $table->foreignId('promotion_id')->constrained()->onDelete('cascade');
             $table->foreignId('service_id')->constrained()->onDelete('cascade');
+            $table->primary(['promotion_id','service_id']);
             $table->timestamps();
-        
-            $table->primary(['promotion_id', 'service_id']); // clave primaria compuesta
         });
+        
     }
 
     public function down(): void {

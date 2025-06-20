@@ -41,8 +41,16 @@ class Service extends Model implements Auditable
     
     public function promotions()
     {
-        return $this->belongsToMany(Promotion::class, 'promotion_service');
+        return $this->belongsToMany(Promotion::class, 'promotion_service')
+                    ->withTimestamps();
     }
 
+    // Itinerarios polimórficos
+    public function itineraries()
+    {
+        return $this->morphMany(Itinerary::class, 'itineraryable')
+                    ->orderBy('day_number')
+                    ->orderBy('start_time');
+    }
     
 }

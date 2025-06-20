@@ -10,17 +10,20 @@ class ExperienceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Service::query()->with(['category', 'zone', 'media'])
-                    ->where('status', 'active');
+        $query = Service::where('status','active')
+            ->with([
+                'category',
+                'zone',
+                'media',
+                'promotions'  => fn($q)=> $q->active(),
+                'itineraries'
+            ]);
 
-        if ($request->has('category_id')) {
+        if ($request->filled('category_id')) {
             $query->where('category_id', $request->category_id);
         }
-        if ($request->has('location_id')) {
+        if ($request->filled('location_id')) {
             $query->where('location_id', $request->location_id);
-        }
-        if ($request->has('rating')) {
-            // Puedes implementar filtro por rating usando reviews, si tienes promedio calculado
         }
 
         return $query->paginate(10);

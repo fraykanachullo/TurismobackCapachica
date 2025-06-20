@@ -1,24 +1,22 @@
 <?php
-// app/Http/Controllers/Publico/CalendarController.php
+
 namespace App\Http\Controllers\Publico;
 
 use App\Http\Controllers\Controller;
-use App\Models\Reservation;
-use Illuminate\Http\Request;
+use App\Models\Service;
+use Illuminate\Http\Response;
 
 class CalendarController extends Controller
 {
-    /**
-     * Devuelve las fechas bloqueadas (reservation_date) para un servicio.
-     */
-    public function occupiedDates($serviceId)
+    // GET /api/services/{service}/calendar
+    public function occupiedDates(Service $service)
     {
-        $dates = Reservation::where('service_id', $serviceId)
-                    ->where('status', 'confirmed')        // o los estados que quieras bloquear
-                    ->pluck('reservation_date')           // <— así, no “date”
-                    ->unique()
-                    ->values();
-
-        return response()->json($dates);
+        $blocked = ['pending','confirmed','completed'];
+        $dates = $service->reservations()
+                         ->whereIn('status', $blocked)
+                         ->pluck('reservation_date')
+                         ->unique()
+                         ->values();
+        return response()->json($dates, Response::HTTP_OK);
     }
 }

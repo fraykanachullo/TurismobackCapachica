@@ -21,15 +21,23 @@ class ServicioController extends Controller
     /**
      * 1️⃣ Listar servicios del emprendedor
      */
-    public function index()
-    {
-        $services = Service::whereHas('company', fn($q) => $q->where('user_id', Auth::id()))
-            ->with(['media','category','zone'])
-            ->latest()
-            ->get();
+     /** 1️⃣ Listar */
+     public function index()
+     {
+         $services = Service::whereHas('company', fn($q)=> $q->where('user_id', Auth::id()))
+             ->with([
+                 'media',
+                 'category',
+                 'zone',
+                 'promotions'  => fn($q)=> $q->active(),
+                 'itineraries'
+             ])
+             ->latest()
+             ->get();
+ 
+         return response()->json($services);
+     }
 
-        return response()->json($services);
-    }
 
     /**
      * 2️⃣ Crear un servicio + subir fotos
@@ -78,7 +86,9 @@ class ServicioController extends Controller
             }
         }
 
-        $service->load(['media','category','zone']);
+        $service->load(['media','category','zone',  'promotions'  => fn($q)=> $q->active(),
+        'itineraries']);
+
         return response()->json([
             'message' => 'Servicio creado exitosamente.',
             'service' => $service
@@ -89,14 +99,25 @@ class ServicioController extends Controller
      * 3️⃣ Mostrar detalle de un servicio propio
      *    GET /api/emprendedor/servicios/{id}
      */
-    public function show($id)
-    {
-        $service = Service::with(['media','category','zone'])->findOrFail($id);
-        if ($service->company->user_id !== Auth::id()) {
-            return response()->json(['message' => 'No autorizado'], 403);
-        }
-        return response()->json($service);
-    }
+     /** 3️⃣ Mostrar detalle */
+     public function show($id)
+     {
+         $service = Service::with([
+                 'media',
+                 'category',
+                 'zone',
+                 'promotions'  => fn($q)=> $q->active(),
+                 'itineraries'
+             ])
+             ->findOrFail($id);
+ 
+         if ($service->company->user_id !== Auth::id()) {
+             return response()->json(['message'=>'No autorizado'], 403);
+         }
+ 
+         return response()->json($service);
+     }
+ 
 
     /**
      * 4️⃣ Actualizar solo campos simples (sin fotos)
@@ -130,7 +151,8 @@ class ServicioController extends Controller
         }
 
         $service->update($validator->validated());
-        $service->load(['media','category','zone']);
+        $service->load(['media','category','zone', 'promotions'  => fn($q)=> $q->active(),
+        'itineraries']);
 
         return response()->json([
             'message' => 'Servicio actualizado.',
