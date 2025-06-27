@@ -29,7 +29,11 @@ class MessageController extends Controller
             $query->where('company_id', $user->company_id);
         }
 
-        $mensajes = $query->orderBy('created_at', 'desc')->get();
+        // a esto:
+        $mensajes = $query
+        ->with(['sender','receiver'])
+        ->orderBy('created_at', 'desc')
+        ->get();
 
         return response()->json($mensajes, 200);
     }

@@ -55,4 +55,6 @@ class Promotion extends Model
         'start_date' => 'date',
         'end_date'   => 'date',
     ];
+
+    public const STATUSES = ['pending','active','expired','inactive'];
 }
