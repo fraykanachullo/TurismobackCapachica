@@ -11,9 +11,10 @@ return new class extends Migration {
             $table->foreignId('company_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->string('slug')->unique();
-            $table->enum('type', ['tour', 'hospedaje', 'gastronomia', 'experiencia']);
             $table->text('description');
-            $table->string('location');
+            // Eliminamos el campo 'location' y 'type'
+            // Añadimos 'ubicacion_detallada' (campo más descriptivo para la ubicación)
+            $table->text('ubicacion_detallada')->nullable();
             $table->decimal('price', 10, 2);
             $table->text('policy_cancellation')->nullable();
             $table->unsignedInteger('capacity')->nullable();

@@ -46,16 +46,16 @@ class ServicioController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title'               => 'required|string|max:255',
-            'type'                => 'required|in:tour,hospedaje,gastronomia,experiencia',
+            'title'               => 'required|string|max:255',   
             'description'         => 'required|string',
-            'location'            => 'required|string',
+            'ubicacion_detallada' => 'nullable|string|max:255',
             'price'               => 'required|numeric|min:0',
             'capacity'            => 'nullable|integer|min:1',
             'duration'            => 'nullable|string|max:100',
             'policy_cancellation' => 'nullable|string',
             'category_id'         => 'required|exists:categories,id',
             'location_id'         => 'required|exists:locations,id',
+           
             // fotos iniciales (opcional)
             'photos.*'            => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5048',
         ]);
@@ -132,15 +132,15 @@ class ServicioController extends Controller
 
         $validator = Validator::make($request->all(), [
             'title'               => 'sometimes|required|string|max:255',
-            'type'                => 'sometimes|required|in:tour,hospedaje,gastronomia,experiencia',
             'description'         => 'sometimes|required|string',
-            'location'            => 'sometimes|required|string|max:255',
+            'ubicacion_detallada' => 'sometimes|nullable|string|max:255',
             'price'               => 'sometimes|required|numeric|min:0',
             'capacity'            => 'sometimes|nullable|integer|min:1',
             'duration'            => 'sometimes|nullable|string|max:100',
             'policy_cancellation' => 'sometimes|nullable|string',
             'category_id'         => 'sometimes|required|exists:categories,id',
             'location_id'         => 'sometimes|required|exists:locations,id',
+            
         ]);
 
         if ($validator->fails()) {

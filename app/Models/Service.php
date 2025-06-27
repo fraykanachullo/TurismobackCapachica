@@ -20,9 +20,9 @@ class Service extends Model implements Auditable
       'location_id',
       'title',
       'slug',
-      'type',
+     
       'description',
-      'location',              // texto libre (dirección)
+      'ubicacion_detallada',     // Nuevo campo para la ubicación detallada
       'price',
       'policy_cancellation',
       'capacity',
