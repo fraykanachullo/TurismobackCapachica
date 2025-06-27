@@ -12,8 +12,6 @@ return new class extends Migration {
             $table->string('title');
             $table->string('slug')->unique();
             $table->text('description');
-            // Eliminamos el campo 'location' y 'type'
-            // Añadimos 'ubicacion_detallada' (campo más descriptivo para la ubicación)
             $table->text('ubicacion_detallada')->nullable();
             $table->decimal('price', 10, 2);
             $table->text('policy_cancellation')->nullable();
