@@ -22,6 +22,7 @@ class EmprendedorController extends Controller
             'website'       => 'nullable|url|max:255',
             'description'   => 'nullable|string',
             'logo'          => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5048',
+            'location_id'   => 'required|exists:locations,id', // Validación para location_id
         ]);
 
         // Subir logo si existe
@@ -42,6 +43,7 @@ class EmprendedorController extends Controller
             'description'   => $request->description,
             'logo_url'      => $logoPath ? asset('storage/' . $logoPath) : null,
             'status'        => 'pendiente',
+            'location_id'   => $request->location_id,  // Asegúrate de que location_id se pase
         ]);
 
         return response()->json([

@@ -11,9 +11,19 @@ class Company extends Model implements Auditable
 {
     use AuditableTrait;
     protected $fillable = [
-        'user_id', 'business_name', 'trade_name', 'service_type',
-        'contact_email', 'phone', 'website', 'description',
-        'logo_url', 'status', 'verified_at', 'ruc', 'location_id',
+        'user_id',
+        'business_name',
+        'trade_name',
+        'service_type',
+        'contact_email',
+        'phone',
+        'website',
+        'description',
+        'logo_url',
+        'status',
+        'verified_at',
+        'ruc',
+        'location_id',
     ];
 
     public function user()
@@ -25,12 +35,12 @@ class Company extends Model implements Auditable
     {
         return $this->hasMany(Service::class);
     }
-        public function location()
+    public function location()
     {
-        return $this->belongsTo(Location::class);
+        return $this->belongsTo(Location::class, 'location_id');
     }
-    
-        public function packages()
+
+    public function packages()
     {
         return $this->hasMany(Package::class);
     }
@@ -39,5 +49,4 @@ class Company extends Model implements Auditable
     {
         return $this->hasMany(Promotion::class);
     }
-
 }

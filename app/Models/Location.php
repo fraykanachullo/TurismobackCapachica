@@ -17,4 +17,10 @@ class Location extends Model
     protected $casts = [
       'galeria' => 'array',
     ];
+
+   public function companies()
+{
+    return $this->hasMany(Company::class, 'location_id');
+}
+
 }

@@ -7,13 +7,16 @@ use Illuminate\Http\JsonResponse;
 
 class LocationController extends Controller
 {
-    /**
-     * GET /api/locations
-     * Sólo devuelve comunidades activas.
-     */
+    
     public function index(): JsonResponse
     {
-        $comunidades = Location::where('type', 'comunidad')
+        $comunidades = Location::with([
+                'companies',                 // Relación empresa
+                'companies.services',       // Servicios del emprendedor
+                'companies.promotions',     // Promociones del emprendedor
+                'companies.user'            // Información del usuario (opcional)
+            ])
+            ->where('type', 'comunidad')
             ->where('estado', 'activa')
             ->get([
                 'id',
@@ -31,4 +34,22 @@ class LocationController extends Controller
 
         return response()->json($comunidades);
     }
+
+    public function show($id): JsonResponse
+{
+    $location = Location::with([
+            'companies.services',
+            'companies.promotions',
+            'companies.user'
+        ])
+        ->where('estado', 'activa') // Solo devolver si está activa
+        ->find($id);
+
+    if (!$location) {
+        return response()->json(['message' => 'Comunidad no encontrada'], 404);
+    }
+
+    return response()->json($location);
+}
+
 }

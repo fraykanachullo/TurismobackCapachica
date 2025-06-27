@@ -100,6 +100,7 @@ Route::prefix('auth')->group(function () {
 
     Route::get('categorias-publicas',  [PublicCategoryController::class, 'index']);
     Route::get('locations',            [LocationController::class, 'index']);
+    Route::get('/locations/{id}', [LocationController::class, 'show']);
     Route::get('categories',           [CategoryController::class, 'index']);
 
     Route::get('promociones-publicas', [PublicPromotionController::class, 'index']);
